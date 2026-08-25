@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Produção</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .big {
+            font-size: 100px;
+        }
+
+        .medium {
+            font-size: 75px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h3 id="date" class="text-center mt-3"></h3>
+    <h1 id="clock" class="text-center mt-1 medium"></h1>
+
+    <div class="container justify-content-center text-center flex-column align-items-center mt-4 bb-4">
+
+        <p class="fs-3" id="turno"></p>
+        <h1 id="meta" class="text-center big"></h1>
+
+        <br>
+
+        <p>
+            <spam class="fw-bold" id="total-hoje"></spam>
+            /
+            <span id="total-meta"></span>
+        </p>
+        <div class="progress-stacked" id="total-progress"></div>
+
+    </div>
+
+    <hr>
+
+    <div class="container text-center">
+        <div class="row" id="container-hour"></div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+
+        const META = 60; // Meta por hora
+        var HORAS;
+
+        const TURNOS = {
+            "Manhã": {
+                "inicio": 6,
+                "fim": 14
+            },
+            "Tarde": {
+                "inicio": 14,
+                "fim": 22
+            }
+        }
+
+        function atualizar(date = new Date()) {
+            const now = new Date(date);
+
+            const min = now.getMinutes();
+            const hour = now.getHours();
+
+            const metaFreq = META / 60;
+            const meta = parseInt((min * metaFreq).toFixed(0));
+
+            var totalHoje = 0;
+            
+            turnoAtual = getTurno(now);
+
+            if (turnoAtual.turno == null) {
+                console.log("sem turno")
+                return;
+            }
+
+            $.ajax({
+                "url": "https://api.alohagelos.com.br/sealing",
+                "type": "GET",
+            })
+            .done(function (response) {
+                points = [];
+
+                // Puxa os pontos
+                response.forEach(point => {
+                    pointDate = new Date(point.created_at);
+                    pointDate = new Date(pointDate.getTime() - 3 * 60 * 60 * 1000);
+
+                    pointHour = pointDate.getHours();
+
+                    if (isSameDate(pointDate, now) === false) {
+                        return;
+                    }
+
+                    if (pointHour < turnoAtual.inicio || pointHour > turnoAtual.fim) {
+                        return;
+                    }
+
+                    if (!points[pointHour]) {
+                        points[pointHour] = [];
+                    }
+
+                    points[pointHour].push(pointDate);
+                });
+
+                // Meta
+                pointsNowSum = points[hour]?.length ?? 0;
+
+                diffMeta = pointsNowSum - meta;
+                if (diffMeta > 0) {
+                    diffMeta =  "+" + diffMeta;
+                }
+
+                $meta = pointsNowSum + "/" + meta + " (" + diffMeta + ")";
+                $("#meta").html($meta)
+
+                diff = meta - pointsNowSum;
+
+                $('#meta').removeClass('text-success text-warning text-danger');
+
+                if (diff <= 0) {
+                    statusColor = "text-success";
+                } else if (diff < 5) {
+                    statusColor = "text-warning";
+                } else {
+                    statusColor = "text-danger";
+                }
+
+                $('#meta').addClass(statusColor);
+
+                // Cards de todas as horas
+                content = "";
+                Object.keys(points).forEach(pointHour => {
+
+                    cardHour = `${pointHour}:00 - ${+pointHour + 1}:00`;
+                    totalPoints = points[pointHour]?.length ?? 0
+                    porcent = (totalPoints / META) * 100;
+
+                    //Total
+                    totalHoje = totalHoje + totalPoints;
+
+                    diffHour = totalPoints - META;
+                    if (diffHour > 0) {
+                        diffHour = "+" + diffHour;
+                    }
+
+                    if (porcent >= 100) {
+                        color = "bg-success";
+                    } else if (pointHour == hour) {
+                        color = "";
+                    } else if (porcent > 90) {
+                        color = "bg-warning";
+                    } else {
+                        color = "bg-danger";
+                    }
+
+                    content += `
+                    <div class="col mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title text-nowrap">${cardHour}</h5>
+                                <p class="card-text">
+                                    <spam class="fw-bold">${totalPoints}</spam>
+                                    /${META} (${diffHour})
+                                </p>
+                                <div class="progress">
+                                    <div class="progress-bar ${color}" style="width: ${porcent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                });
+                $("#container-hour").html(content);
+
+
+                // Meta Dia
+                horasTrabalhadas = (hour - turnoAtual.inicio) + (min / 60);
+                if (horasTrabalhadas > HORAS) {
+                    horasTrabalhadas = HORAS;
+                }
+
+                const totalMeta = META * HORAS;
+                const totalMetaPerfeita = META * horasTrabalhadas;
+
+                const totalPercent = (totalHoje / totalMeta) * 100;
+                var restPercent = ((totalMetaPerfeita / totalMeta) * 100) - totalPercent;
+                var rest = (totalMetaPerfeita - totalHoje).toFixed(0);
+
+                if (restPercent < 1) {
+                    restPercent = 0;
+                    rest = "";
+                }
+
+                $("#total-meta").html(totalMeta);
+                $("#total-hoje").html(totalHoje);
+
+                $("#total-progress").html(`
+                    <div class="progress" style="width: ${totalPercent}%">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <div class="progress" style="width: ${restPercent}%">
+                        <div class="progress-bar bg-danger progress-bar-striped">${rest}</div>
+                    </div>
+                `)
+
+            })
+        }
+
+        function getTurno(dataHora = new Date()) {
+            const hora = dataHora.getHours();
+
+            for (const [nomeTurno, horarios] of Object.entries(TURNOS)) {
+                if (hora >= horarios.inicio && hora < horarios.fim) {
+
+                    HORAS = horarios.fim - horarios.inicio - 1;
+                    $("#turno").html(nomeTurno + " (" + horarios.inicio + ":00 - " + horarios.fim + ":00)");
+                    
+                    var date = dataHora.getDate() + "/" + (dataHora.getMonth() + 1) + "/" + dataHora.getFullYear();
+                    $("#date").html(date);
+
+                    return {
+                        turno: nomeTurno,
+                        inicio: horarios.inicio,
+                        fim: horarios.fim
+                    };
+                }
+            }
+
+            return { turno: null, inicio: null, fim: null }; 
+        }
+
+        function isSameDate(d1, d2) {
+            if (
+                d1.getFullYear() === d2.getFullYear()
+                && d1.getMonth() === d2.getMonth()
+                && d1.getDate() === d2.getDate()
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+        function clock() {
+            const now = new Date();
+            var min = now.getMinutes();
+            const hour = now.getHours();
+            var sec = now.getSeconds();
+
+            if (min < 10) {
+                min = "0" + min;
+            }
+
+            if (sec < 10) {
+                sec = "0" + sec;
+            }
+
+            $("#clock").html(hour + ":" + min + ":" + sec)
+        }
+
+        // ----------------------------------------------------
+        // Main
+
+        var now = new Date();
+        // var now = new Date("2026-08-25T13:59:59");
+
+        atualizar(now);
+        clock();
+
+        setInterval(atualizar(now), 10000);
+        setInterval(clock, 1000)
+    </script>
+</body>
+
+</html>

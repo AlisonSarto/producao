@@ -54,6 +54,8 @@
     <script>
 
         const META = 60; // Meta por hora
+        const PACOTES_MIN = Math.ceil(META / 60);
+        const INTERVALO_ATUALIZACAO = (60 / PACOTES_MIN) * 1000 / 2; 
         var HORAS;
 
         const TURNOS = {
@@ -131,8 +133,6 @@
 
                 if (diff <= 0) {
                     statusColor = "text-success";
-                } else if (diff < 5) {
-                    statusColor = "text-warning";
                 } else {
                     statusColor = "text-danger";
                 }
@@ -159,7 +159,7 @@
                         color = "bg-success";
                     } else if (pointHour == hour) {
                         color = "";
-                    } else if (porcent > 90) {
+                    } else if (diffHour >= -10) {
                         color = "bg-warning";
                     } else {
                         color = "bg-danger";
@@ -277,10 +277,13 @@
         var now = new Date();
         // var now = new Date("2026-08-25T13:59:59");
 
-        atualizar(now);
+        atualizar();
         clock();
 
-        setInterval(atualizar(now), 10000);
+        setInterval(function() {
+            atualizar();
+        }, INTERVALO_ATUALIZACAO);
+
         setInterval(clock, 1000)
     </script>
 </body>

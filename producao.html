@@ -83,12 +83,15 @@
 
 <body>
 
-    <h3 id="date" class="text-center mt-3"></h3>
+    <div class="d-flex text-center mt-3 justify-content-center">
+        <h3 id="date"></h3>
+        <h3 class="mx-1">-</h3>
+        <h3 id="turno"></h3>
+    </div>
     <h1 id="clock" class="text-center mt-1 medium"></h1>
 
     <div class="container justify-content-center text-center flex-column align-items-center mt-4 bb-4">
 
-        <p class="fs-3" id="turno"></p>
         <h1 id="meta" class="text-center big"></h1>
 
         <br>
@@ -124,6 +127,7 @@
         const TURNOS = {
             "Manhã": {
                 "inicio": 6,
+                "almoco": 11,
                 "fim": 14
             },
             "Tarde": {
@@ -154,7 +158,7 @@
             turnoAtual = getTurno(now);
 
             if (turnoAtual.turno == null) {
-                console.log("sem turno")
+                $("#meta").html("Sem Turno")
                 return;
             }
 
@@ -196,7 +200,6 @@
                 }
 
                 $meta = pointsNowSum + "/" + meta + " (" + diffMeta + ")";
-                $("#meta").html($meta)
 
                 diff = meta - pointsNowSum;
 
@@ -210,7 +213,14 @@
                     statusColor = "text-danger";
                 }
 
-                $('#meta').addClass(statusColor);
+                if (hour != turnoAtual.almoco) {
+                    $('#meta').addClass(statusColor);
+                    $("#meta").html($meta);
+                } else {
+                    $("#meta").addClass("text-success");
+                    $("#meta").html("Almoço");
+
+                }
 
                 if (pointsNowSum >= META) {
                     startConfetti();
@@ -265,7 +275,15 @@
 
 
                 // Meta Dia
-                horasTrabalhadas = (hour - turnoAtual.inicio) + (min / 60);
+                totalHoje = 350
+                horasTrabalhadas = hour - turnoAtual.inicio;
+                if (hour != turnoAtual.almoco) { // Congela na hora do almoço
+                    horasTrabalhadas += min / 60
+                }
+                if (hour > turnoAtual.almoco) {
+                    horasTrabalhadas--;
+                }
+
                 if (horasTrabalhadas > HORAS) {
                     horasTrabalhadas = HORAS;
                 }
@@ -273,7 +291,7 @@
                 const totalMeta = META * HORAS;
                 const totalMetaPerfeita = META * horasTrabalhadas;
 
-                const totalPercent = (totalHoje / totalMeta) * 100;
+                var totalPercent = (totalHoje / totalMeta) * 100;
                 var restPercent = ((totalMetaPerfeita / totalMeta) * 100) - totalPercent;
                 var rest = (totalMetaPerfeita - totalHoje).toFixed(0);
 
@@ -303,15 +321,23 @@
             for (const [nomeTurno, horarios] of Object.entries(TURNOS)) {
                 if (hora >= horarios.inicio && hora < horarios.fim) {
 
-                    HORAS = horarios.fim - horarios.inicio - 1;
+                    HORAS = horarios.fim - horarios.inicio;
+
+                    if (horarios.almoco !== null) {
+                        HORAS = HORAS - 1;
+                    }
+
                     $("#turno").html(nomeTurno + " (" + horarios.inicio + ":00 - " + horarios.fim + ":00)");
                     
-                    var date = dataHora.getDate() + "/" + (dataHora.getMonth() + 1) + "/" + dataHora.getFullYear();
+                    var date = String(dataHora.getDate()).padStart(2, '0') + "/" +
+                               String(dataHora.getMonth() + 1).padStart(2, '0') + "/" +
+                               dataHora.getFullYear();
                     $("#date").html(date);
 
                     return {
                         turno: nomeTurno,
                         inicio: horarios.inicio,
+                        almoco: horarios.almoco,
                         fim: horarios.fim
                     };
                 }

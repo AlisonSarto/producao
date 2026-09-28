@@ -16,6 +16,7 @@
             font-size: 75px;
         }
 
+        /* Text Rainbow */
         .text-rainbow{
             position: relative;
             color: #000;
@@ -47,6 +48,35 @@
                 text-shadow: none;
             }
             .text-rainbow::before{ content: none; }
+        }
+
+        /* Progress Bar Raindow */
+        .bg-rainbow {
+            background: linear-gradient(
+                90deg,
+                #ff0000,
+                #ff8c00,
+                #ffff00,
+                #00ff00,
+                #00ffff,
+                #0080ff,
+                #8a2be2,
+                #ff00ff,
+                #ff0000
+            );
+
+            background-size: 400% 100%;
+            animation: rainbow 5s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
         }
     </style>
 </head>
@@ -191,7 +221,7 @@
                 Object.keys(points).forEach(pointHour => {
 
                     cardHour = `${pointHour}:00 - ${+pointHour + 1}:00`;
-                    totalPoints = points[pointHour]?.length ?? 0
+                    totalPoints = points[pointHour]?.length ?? 0;
                     porcent = (totalPoints / META) * 100;
 
                     //Total
@@ -202,7 +232,9 @@
                         diffHour = "+" + diffHour;
                     }
 
-                    if (porcent >= 100) {
+                    if (porcent >= 100 && diffHour >= 3){
+                        color = "bg-rainbow";
+                    }else if (porcent >= 100) {
                         color = "bg-success";
                     } else if (pointHour == hour) {
                         color = "";

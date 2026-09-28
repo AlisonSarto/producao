@@ -275,7 +275,6 @@
 
 
                 // Meta Dia
-                totalHoje = 350
                 horasTrabalhadas = hour - turnoAtual.inicio;
                 if (hour != turnoAtual.almoco) { // Congela na hora do almoço
                     horasTrabalhadas += min / 60
@@ -309,6 +308,9 @@
                     </div>
                     <div class="progress" style="width: ${restPercent}%">
                         <div class="progress-bar bg-danger progress-bar-striped">${rest}</div>
+                    </div>
+                    <div class="progress" style="width: %">
+                        <div class="progress-bar bg-rainbow"></div>
                     </div>
                 `)
 

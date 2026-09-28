@@ -83,7 +83,7 @@
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script> 
     <script>
 
         const META = 60; // Meta por hora
@@ -181,6 +181,10 @@
                 }
 
                 $('#meta').addClass(statusColor);
+
+                if (pointsNowSum >= META) {
+                    startConfetti();
+                }
 
                 // Cards de todas as horas
                 content = "";
@@ -312,6 +316,42 @@
             }
 
             $("#clock").html(hour + ":" + min + ":" + sec)
+        }
+
+        var ultimaHoraConfete = null; 
+        function startConfetti() {
+            var hour = new Date().getHours(); 
+
+            if (ultimaHoraConfete === hour) {
+                return; 
+            }
+
+            ultimaHoraConfete = hour;
+
+            var end = Date.now() + (5 * 1000);
+            
+            var colors = ['#ff0055', '#00ffcc', '#ffcc00', '#6600ff'];
+
+            (function frame() {
+                confetti({
+                    particleCount: 4,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 4,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: colors
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
         }
 
         // ----------------------------------------------------

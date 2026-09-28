@@ -293,10 +293,18 @@
                 var totalPercent = (totalHoje / totalMeta) * 100;
                 var restPercent = ((totalMetaPerfeita / totalMeta) * 100) - totalPercent;
                 var rest = (totalMetaPerfeita - totalHoje).toFixed(0);
+                var diffNow = totalHoje - totalMetaPerfeita;
 
                 if (restPercent < 1) {
                     restPercent = 0;
                     rest = "";
+                }
+
+                color = "";
+                plusDiff = "";
+                if (diffNow >= 10){
+                    color = "bg-rainbow";
+                    plusDiff = "+" + diffNow;
                 }
 
                 $("#total-meta").html(totalMeta);
@@ -304,13 +312,10 @@
 
                 $("#total-progress").html(`
                     <div class="progress" style="width: ${totalPercent}%">
-                        <div class="progress-bar"></div>
+                        <div class="progress-bar ${color}">${plusDiff}</div>
                     </div>
                     <div class="progress" style="width: ${restPercent}%">
                         <div class="progress-bar bg-danger progress-bar-striped">${rest}</div>
-                    </div>
-                    <div class="progress" style="width: %">
-                        <div class="progress-bar bg-rainbow"></div>
                     </div>
                 `)
 

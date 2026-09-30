@@ -203,7 +203,7 @@
 
                 diff = meta - pointsNowSum;
 
-                $('#meta').removeClass('text-success text-warning text-danger');
+                $('#meta').removeClass('text-success text-warning text-danger text-rainbow');
 
                 if (pointsNowSum > META){
                     statusColor = "text-rainbow";
@@ -302,7 +302,10 @@
 
                 color = "";
                 plusDiff = "";
-                if (diffNow >= 10){
+                if (diffNow >= 0){
+                    color = "bg-success";
+                    plusDiff = "+" + diffNow;
+                }else if (diffNow >= 10) {
                     color = "bg-rainbow";
                     plusDiff = "+" + diffNow;
                 }

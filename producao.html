@@ -173,7 +173,7 @@
                 // Puxa os pontos
                 response.forEach(point => {
                     pointDate = new Date(point.created_at);
-                    pointDate = new Date(pointDate.getTime() - 3 * 60 * 60 * 1000);
+                    // pointDate = new Date(pointDate.getTime() - 3 * 60 * 60 * 1000);
 
                     pointHour = pointDate.getHours();
 
